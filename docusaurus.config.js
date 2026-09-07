@@ -19,14 +19,13 @@ const config = {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
-  // Set the production url of your site here
-  url: 'https://kryasolutions.github.io',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/securezen/',
+  // Deployed on Netlify, not GitHub Pages - GitHub Pages requires the repo to
+  // be public (or a paid plan) to publish from a private repo, which this
+  // isn't. Netlify serves from its own domain root, not a /<repo>/ subpath -
+  // update `url` to the real Netlify URL once the site is created there.
+  url: 'https://securezen-docs.netlify.app',
+  baseUrl: '/',
 
-  // GitHub pages deployment config (deployed via .github/workflows/deploy-docs.yml
-  // using actions/deploy-pages, not the docusaurus-deploy branch-push mechanism).
   organizationName: 'KryaSolutions', // GitHub org name.
   projectName: 'securezen', // Repo name.
 

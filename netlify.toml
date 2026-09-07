@@ -1,0 +1,14 @@
+[build]
+  base = "website"
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Docusaurus pre-renders a real HTML file per doc page plus its own styled
+# 404.html - route genuinely unknown paths there instead of Netlify's default.
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404

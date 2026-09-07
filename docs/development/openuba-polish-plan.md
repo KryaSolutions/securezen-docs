@@ -1,0 +1,76 @@
+# OpenUBA-Inspired Polish: Anomalies, General Settings, AI Integrations
+
+## Why
+
+After RBAC (Access tab) shipped, direct comparison against OpenUBA's screenshots surfaced 3 more real gaps worth closing, same "borrow the idea, not the code, keep our theme" approach as everything else in this project:
+
+1. **Anomalies page** — OpenUBA has a scrollable *event log* of individual flagged anomaly days with acknowledge/dismiss workflow. SecureZen's UEBA only has "Entity Risk" (current score leaderboard, one row per entity) — genuinely different shape, not a duplicate.
+2. **General settings tab** — instance-level preferences (currently scattered/missing).
+3. **AI Integrations tab** — explicitly requested to be *real*, not a status display: users should be able to configure and switch between Groq/OpenAI/Claude/Gemini/Ollama from the frontend, and have it actually change what SecureZen's AI features use.
+
+## Order
+
+Anomalies page → General tab → Integrations tab (per explicit instruction), even though Integrations is architecturally the biggest one.
+
+## Phase 1 — Anomalies page
+
+New UEBA sub-page, sibling to Overview/Entities/Rules. Sources from the existing `sz_ueba_risk_scores` table (already has `entity_id`, `score_date`, `risk_pct`, `risk_level`, `contributing_rules`, one row per entity per day) rather than a new signal pipeline.
+
+- **Schema**: add `acknowledged BOOLEAN NOT NULL DEFAULT FALSE` and `acknowledged_by TEXT`, `acknowledged_at TIMESTAMPTZ` to `sz_ueba_risk_scores` — additive, no new table needed.
+- **Backend**: `GET /api/ueba/anomalies` (stat tiles: total flagged rows i.e. `risk_level != 'Low'`, high-risk count, unacknowledged count, avg risk %; filters: entity search, risk level, ack status), `PATCH /api/ueba/anomalies/{id}/acknowledge`.
+- **Frontend**: `UebaAnomaliesPage.jsx`, same filter-drawer/table pattern as Entities, stat tiles like Overview, Acknowledge button per row. Nav item under existing "Behavior Analytics" section. New permission `View Anomalies` (added to the RBAC page map from the earlier work, so it's gated like every other page).
+
+## Phase 2 — General settings tab
+
+New tab in `Configuration.jsx`, alongside API Keys/ML Models/System/Access.
+
+- **Dark Mode toggle**: wired to the *existing* `ThemeContext`/`useTheme()` — not a new independent toggle. Confirmed this already exists (`ThemeToggle.jsx`) before planning this, specifically to avoid building a second, out-of-sync dark-mode switch.
+- **Auto-refresh Dashboard**: genuine new preference — an interval (default 30s) controlling the dashboard's existing polling, stored per-user (localStorage is enough, no need for a new DB table for a client-side UI preference).
+- **Instance Name**: cosmetic label shown in the header/sidebar; stored in a small `sz_settings key/value` table (new, minimal — first real use of a generic settings store, which Integrations' provider config will also use in Phase 3).
+
+## Phase 3 — AI Integrations tab (real provider switching)
+
+This is the one that has to actually work, not just display status - confirmed feasible by tracing the codebase first: **every AI call in SecureZen (~19 call sites across routers/services) funnels through one function**, `call_groq_with_fallback()` in `backend/app/utils/helpers.py`. That single choke point is what makes real switching tractable without touching 19 files.
+
+- **Schema**: `sz_llm_providers (id, type ['groq'|'openai'|'claude'|'gemini'|'ollama'], enabled, api_key, host_url, model, is_active)`. Exactly one row can be `is_active` at a time — that's "the provider currently serving requests."
+- **Backend**:
+  - `backend/app/services/llm_provider.py` — per-type adapter functions (Groq/OpenAI already share the same OpenAI-compatible REST shape `call_groq_with_fallback` uses today; Claude needs the Messages API shape; Gemini needs `generateContent`; Ollama needs its local `/api/generate` shape). Each adapter takes `(prompt, max_tokens, config)` and returns `(text, model_used)` — same return shape `call_groq_with_fallback` already has, so callers don't change.
+  - Modify `call_groq_with_fallback()` itself to: look up the `is_active` row in `sz_llm_providers`; if none configured, fall back to today's `GROQ_API_KEY` env-var behavior unchanged (zero-downtime — nobody's AI features break if they never touch this new tab); if a provider is active, dispatch to its adapter instead. **19 call sites need zero changes** — they all just call the same function.
+  - `backend/app/routers/llm_provider_routes.py` — CRUD for provider configs, `POST /api/admin/llm-providers/{id}/activate` (flips `is_active`, deactivates the rest), `POST /api/admin/llm-providers/{id}/test` — a *real* connectivity check per provider type (small live request to Groq/OpenAI/Claude/Gemini's real API, or Ollama's local `/api/tags`), not a fake always-green light.
+- **Frontend**: restyle the existing API Keys tab into OpenUBA's card layout — one card per provider (icon, name, description, Enabled/Active toggle, Configure drawer with the fields that provider actually needs, Test Connection hitting the real endpoint). VirusTotal/AbuseIPDB (enrichment APIs, not chat completions) get their own cards in the same visual style but keep their existing simpler key-only config, since they were never meant to be swappable "the AI" the way Groq/OpenAI/Claude/Gemini/Ollama are.
+
+## Rollout
+
+- [x] **Phase 1 — Anomalies page.** Added `acknowledged`/`acknowledged_by`/`acknowledged_at` columns to `sz_ueba_risk_scores` (additive, in `rule_engine.py`'s existing `_ensure_schema`). New `GET /api/ueba/anomalies` (stat tiles + filterable list of flagged, non-Low score-days) and `PATCH /api/ueba/anomalies/{id}/acknowledge`. New `UebaAnomaliesPage.jsx`, same filter-drawer pattern as Entities, status pills (all/unacknowledged/acknowledged), acknowledge/unacknowledge button per row. Added `View Anomalies` as a proper RBAC permission - new page map entry, grandfathered into existing roles the same way as the original 8 (so it doesn't lock anyone out), gated on the backend route. Verified live against real data: 47 real flagged anomalies returned, acknowledge/unacknowledge round-trips correctly (stats recompute, `acknowledged_by` records the real logged-in email), permission gating confirmed with a throwaway low-priv role (403 without `View Anomalies`, 200 after granting), frontend confirmed compiling through Vite's real transform pipeline. Nav wired into Sidebar (Behavior Analytics section) and both `App.jsx` and `routes.jsx` (kept in sync even though the latter's own `<Routes>` tree is dead code, per the established habit from earlier UEBA phases).
+- [x] **Phase 2 — General tab.** Real finding before writing any code: SecureZen already had *both* things this phase needed, just not surfaced together. (1) Dark Mode - wired the tab's toggle to the existing `useTheme()`/`ThemeContext`, no second toggle created. (2) Auto-refresh - `useAlerts.js` already polls every 30s unconditionally with no way to turn it off; made the interval check `localStorage.sz_auto_refresh` on every tick instead of adding a new mechanism, so the toggle controls real, already-running behavior. Worth flagging: this always-on, unconditional 30s poll firing across the whole session is a plausible cause of the "random flickering, 2 days now" issue reported earlier and still unresolved - now toggleable off as a first troubleshooting step, though not confirmed as the root cause. (3) Instance Name - discovered a generic `sz_system_settings` key/value store + `GET/POST /api/system/settings` already existed, so no new table was needed. **Found and fixed a real, pre-existing security gap while wiring this**: the `POST /api/system/settings` endpoint had no admin check at all - any logged-in user, including the most restricted viewer role, could already overwrite any system-wide setting. Added `verify_admin_token`, verified live with a real ROLE_VIEWER test account (403 where it was previously wide open). Instance Name now shows as a small badge next to the SecureZen logo, only when set - zero visual change for anyone who hasn't touched it. Verified live: settings round-trip through the real endpoint, admin-only write confirmed, frontend confirmed compiling through Vite's real transform pipeline.
+- [x] **Phase 3 — AI Integrations tab.** New `sz_llm_providers` table (one row per type: groq/openai/claude/gemini/ollama), `backend/app/services/llm_provider.py` with a real per-type adapter (Groq/OpenAI share the OpenAI-compatible chat-completions shape; Claude uses the Messages API; Gemini uses `generateContent`; Ollama uses its local `/api/generate`). `call_groq_with_fallback()` - the single function every one of the ~19 AI call sites in the codebase already goes through - now checks for an admin-activated provider first and falls through to its original hardcoded-Groq-env-var behavior unchanged if none is configured. **Zero of the 19 call sites needed to change.** New `backend/app/routers/llm_provider_routes.py`: list/update/activate/deactivate-all/test, all writes admin-only. New Integrations tab: one card per provider, Enable toggle, Configure panel (API key / host URL / model), real live Test Connection, Activate/Deactivate.
+
+  Verified this one unusually thoroughly given it touches the shared AI choke point - not just endpoint-level checks:
+  - Confirmed backward compatibility first: with nothing configured, `call_groq_with_fallback()` runs byte-for-byte the same original code path (verified by calling it directly inside the running container, not just via HTTP).
+  - Configured Groq for real (using the actual `GROQ_API_KEY` already in `.env`) through the real API endpoints, then called `call_groq_with_fallback()` again and confirmed it now returns `model: openai/gpt-oss-20b` - proof the routing genuinely switches, not just that the config saves.
+  - Live Test Connection hit Groq's real API and got a real response.
+  - Found two real bugs along the way, both fixed: (1) the connectivity test used only 10 max_tokens, which came back empty against reasoning-style models (gpt-oss et al. spend tokens on hidden reasoning before visible output) - bumped to 60 and reverified with a real "OK" response. (2) **Pre-existing, unrelated to this work**: 2 of the original 4 hardcoded Groq fallback model names (`llama-3.1-8b-instant`, `llama-3.3-70b-versatile`) no longer exist on Groq's side - confirmed by listing the account's real available models. Every original Groq call has therefore been wasting 2 failed round-trips before succeeding, for a while now. Left as-is since fixing the original fallback list is outside this plan's scope, but worth a follow-up.
+  - Reset all 5 provider rows to disabled/inactive before finishing, so the live system is in exactly the state it was in before this phase touched it - the Groq env-var fallback is what's actually serving requests right now, same as always.
+
+Each phase tested against real running backend before being marked done, same discipline as UEBA/RBAC.
+
+## Phase 1.1 — Anomalies page follow-up (real feedback, not cosmetic)
+
+After Phase 1 shipped, live testing surfaced 3 concrete requests:
+
+1. **Acknowledge needs a real decision, and admin-only.** A bare acknowledge toggle isn't a triage decision. Added `resolution TEXT` to `sz_ueba_risk_scores` and a whitelist (`RESOLUTION_OPTIONS` in `ueba_routes.py`: False Positive / Confirmed Threat - Escalated / Confirmed Threat - Resolved / Expected-Authorized / Monitoring-Inconclusive). The PATCH endpoint now 400s if `acknowledged=true` without a valid resolution, and switched from `require_permission("View Anomalies")` to `verify_admin_token` - viewing anomalies and deciding their outcome are different privilege levels. Frontend: clicking Acknowledge opens a modal requiring a resolution pick before it submits; the button itself only renders for `isAdmin` (non-admins see "Admin only").
+2. **Page needed real dashboard components**, matching OpenUBA's Home page density rather than a bare table: added a 14-day Anomaly Trend area chart (new `trend` field in the `/anomalies` response, same shape as Overview's `risk_over_time`) and a Severity Breakdown donut (computed client-side from the current filtered result set - no extra backend call needed). Added a Recent Triage Activity feed (mirrors OpenUBA's System Events panel) showing the last 6 acknowledgment decisions with who/what/when - also derived client-side from data already fetched.
+3. **Exact filter replication from OpenUBA's Anomalies page**: replaced the per-column filter-icon-drawer pattern (used everywhere else in this app - Entities, Assets, CCCorrelatedAlerts) with OpenUBA's row of dropdowns (risk level / status / entity type) sitting next to the search box, per explicit instruction to match that one page exactly rather than stay consistent with the app's usual pattern.
+
+Verified live: 400 without a resolution, 400 on an invalid resolution string, 200 + persisted correctly with a valid one, 403 for a non-admin token attempting to acknowledge, and the new `entity_type`/combined `risk_level`+`status` query params all filter correctly against real data. Reset the one test row touched back to unacknowledged afterward.
+
+## Phase 1.2 — Assign to analyst + notify (real gap the user caught)
+
+User asked directly: if an admin decides an anomaly needs attention, how does the analyst who's supposed to work it actually find out? Answer at the time: nothing did - acknowledge only ever recorded whoever clicked it, there was no handoff to someone else and no notification. Confirmed SecureZen already has this exact pattern working for regular Alerts (`PATCH /alerts/{id}/assign` in `alerts/core.py`, using `create_notification()`) - built the same thing for anomalies rather than inventing a new pattern.
+
+- Added `assigned_analyst_id INTEGER` to `sz_ueba_risk_scores` (no hard FK - `sz_analysts` is managed separately, same convention `Alert.assigned_analyst_id` already follows).
+- `PATCH /api/ueba/anomalies/{id}/assign` (admin-only, same bar as acknowledge): validates the anomaly and analyst both exist, sets the assignment, then calls the exact same `create_notification()` helper `assign_alert` uses - same `sz_notifications` table, same delivery mechanism, so it shows up in the existing notification bell with zero frontend changes to that component. `DELETE .../assign` to unassign.
+- `GET /anomalies` now LEFT JOINs `sz_analysts` so the row includes `assigned_analyst_name`/`assigned_analyst_email` without a second round-trip.
+- Frontend: new "Assigned To" column, an Assign button (admin-only, opens a modal listing real analysts fetched from the existing `/api/admin/analysts` endpoint) and Unassign, sitting alongside Acknowledge in Actions - assignment (a handoff) and acknowledgment (a closed decision) are deliberately separate actions, not conflated into one button.
+
+Verified live end-to-end against real data: assigned a real anomaly to a real analyst, confirmed the row reflects the assignment via the join, confirmed a real row landed in `sz_notifications` for that analyst with the correct message text, confirmed a non-admin gets 403 on the assign attempt, confirmed unassign clears it. Reset the test anomaly back to unassigned and deleted the throwaway test account afterward.

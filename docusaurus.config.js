@@ -19,11 +19,13 @@ const config = {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
-  // Deployed on Netlify, not GitHub Pages - GitHub Pages requires the repo to
-  // be public (or a paid plan) to publish from a private repo, which this
-  // isn't. Netlify serves from its own domain root, not a /<repo>/ subpath -
-  // update `url` to the real Netlify URL once the site is created there.
-  url: 'https://securezen-docs.netlify.app',
+  // Deployed on Cloudflare Pages, not GitHub Pages or Netlify - both of
+  // those require a paid plan to publish a private repo owned by a GitHub
+  // Organization (KryaSolutions), which this is. Cloudflare Pages has no
+  // such restriction on its free tier. Serves from its own domain root,
+  // not a /<repo>/ subpath - update `url` to the real *.pages.dev URL
+  // (or custom domain) once the site is created there.
+  url: 'https://securezen-docs.pages.dev',
   baseUrl: '/',
 
   organizationName: 'KryaSolutions', // GitHub org name.

@@ -19,17 +19,18 @@ const config = {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
-  // Deployed on Cloudflare Pages, not GitHub Pages or Netlify - both of
-  // those require a paid plan to publish a private repo owned by a GitHub
-  // Organization (KryaSolutions), which this is. Cloudflare Pages has no
-  // such restriction on its free tier. Serves from its own domain root,
-  // not a /<repo>/ subpath - update `url` to the real *.pages.dev URL
-  // (or custom domain) once the site is created there.
-  url: 'https://securezen-docs.pages.dev',
-  baseUrl: '/',
+  // Deployed via GitHub Pages from a separate PUBLIC mirror repo
+  // (KryaSolutions/securezen-docs) - the real source repo (securezen) is
+  // private, and GitHub Pages refuses to publish from a private repo on
+  // a free org plan. This website/ folder's content is pushed to that
+  // mirror repo via `git subtree push`; a GitHub Actions workflow there
+  // builds and publishes it. GitHub Pages project sites serve at
+  // <org>.github.io/<repo>/, hence the /securezen-docs/ baseUrl below.
+  url: 'https://kryasolutions.github.io',
+  baseUrl: '/securezen-docs/',
 
   organizationName: 'KryaSolutions', // GitHub org name.
-  projectName: 'securezen', // Repo name.
+  projectName: 'securezen-docs', // Repo name (the public mirror, not the private source repo).
 
   // 60+ migrated docs carry legacy relative links (README.md, CHANGELOG.md,
   // links to files renamed/removed during migration) - warn instead of
@@ -57,7 +58,7 @@ const config = {
       ({
         docs: {
           sidebarPath: './sidebars.js',
-          editUrl: 'https://github.com/KryaSolutions/securezen/tree/dev/website/',
+          editUrl: 'https://github.com/KryaSolutions/securezen-docs/tree/main/',
           routeBasePath: '/', // serve docs at site root, no /docs/ prefix
         },
         blog: false,
@@ -88,7 +89,7 @@ const config = {
             label: 'Docs',
           },
           {
-            href: 'https://github.com/KryaSolutions/securezen',
+            href: 'https://github.com/KryaSolutions/securezen-docs',
             label: 'GitHub',
             position: 'right',
           },

@@ -80,10 +80,109 @@ Verdicts & accuracy (`verdicts.py`): `GET /ai-verdicts`, `GET /benchmark-stats`,
 | `email_routes.py` | `/api/email` | phishing/email analysis, sender analysis, reports |
 | `ingestion_routes.py` | `/api/ingest` | `POST /webhook`, `POST /manual`, `POST /raw-siem` — the actual ingestion entry points |
 | `connector_routes.py` | `/api/connectors` | SIEM connector CRUD, `POST /{id}/sync-siem` |
+| `connected_sources_routes.py` | `/api/connected-sources` | `GET /` — live gRPC-backed source status |
 | `system_routes.py` | `/api/system` | `GET /health`, config, API key status, device inventory |
 | `reports_routes.py` | `/api/reports` | generate/list/download/delete SOC reports |
 | `audit_routes.py` | `/api/audit` | audit log |
 | `pg_verdicts_routes.py` | `/api/pg-verdicts` | only mounted behind a feature flag — direct read access to the Postgres `verdicts` table |
+
+## Agent fleet — `/api/agents` (`agents_routes.py`), new October 2026
+
+See `docs/architecture/agentic_architecture.md` for what each agent actually does.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/runs` | recent agent run history |
+| GET | `/activity` | `sz_agent_activity_log` feed |
+| GET | `/activity/recent` | same, trimmed for the dashboard widget |
+| POST | `/threat-hunt` | kick off a Threat Hunter run |
+| POST | `/attack-path` | build an Attack Path graph for an alert/campaign/entity (also used by Blast Radius) |
+
+## Human-approval gate — `/api/agent-actions` (`approval_queue_routes.py`)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/` | pending/approved/rejected proposed actions (e.g. block-IP from Response/SOAR) |
+| POST | `/{action_id}/approve` | approve → `_ACTION_EXECUTORS` actually runs it |
+| POST | `/{action_id}/reject` | reject → logged, nothing executes |
+
+## Blast Radius — `/api/blast-radius` (`blast_radius_routes.py`)
+
+See `docs/architecture/blast-radius.md`.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/graph` | case/entity node-edge graph for the case explorer |
+| GET | `/case/{case_id}` | single case detail (for the case report split view) |
+
+## Custom Detection Rules — `/api/detection-rules` (`detection_rules_routes.py`)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/` | list every rule (AI-drafted or human-authored) |
+| POST | `/` | author a new rule directly as a human (no approval gate — no self-approval needed) |
+| PATCH | `/{rule_id}` | edit a rule |
+| POST | `/{rule_id}/deactivate` / `/{rule_id}/activate` | toggle whether `ml_worker_daemon.py` enforces it |
+
+## Detection Tuning — `/api/detection-tuning` (`detection_tuning_routes.py`)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/` | rule false-positive-rate recommendations from the Detection Tuning agent |
+| POST | `/{recommendation_id}/dismiss` | human dismisses a recommendation without acting on it |
+
+## Incidents — `/api/incidents` (`incident_routes.py`)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/` | incident list (what Incident Commander has merged/opened) |
+| GET | `/{incident_id}/alerts` | member alerts |
+| GET | `/{incident_id}/report` / `/report/pdf` | generated incident report |
+| POST | `/{incident_id}/status` | allowed values: `open`/`investigating`/`contained`/`resolved` |
+
+## Compliance / Executive Briefing — `/api/compliance`, `/api/executive-briefing`
+
+Single `GET /` on each — the latest report from the respective agent (`compliance_agent.py`, `executive_briefing_agent.py`).
+
+## Forensic Analysis / embedded OpenSearch — `/api/forensics` (`forensics_routes.py`)
+
+See `docs/architecture/forensic-analysis.md`.
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/osd-theme` | sync OSD's global dark/light setting to SecureZen's own toggle |
+| GET | `/alert/{alert_id}` | deep-link params for embedding Discover scoped to one alert |
+
+## Resource Governance — `/api/governance` (`governance_routes.py`)
+
+See `docs/architecture/agentic_architecture.md` §6.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/limits` | AI budget, Groq fallback rate, login limiter, DB pool usage |
+| GET | `/agent-health` | per-agent run outcomes from `sz_agent_activity_log` |
+
+## Pluggable LLM providers / threat-intel keys — `/api/admin/llm-providers`, `/api/admin/threat-intel-keys`
+
+Admin-only. `GET /` lists configured providers/keys; `PUT /{id}` saves one (also writes `.env` in parallel so it takes effect without a restart); `POST /{id}/activate` (providers) or `/{provider}/test` (both) validates it works.
+
+## SOC Insights — `/api/soc-insights` (`soc_insights_routes.py`)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/metrics` | headline SOC KPIs |
+| GET | `/confidence-calibration` | is the fleet's self-reported confidence actually correlated with being right |
+| GET | `/cost-telemetry` | real Langfuse-backed cost/token numbers |
+
+## UEBA — `/api/ueba` (`ueba_routes.py`)
+
+See `docs/architecture/agentic_architecture.md` §7 and `docs/development/ueba-plan.md`.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/overview`, `/entities`, `/entities/{entity_id}` | entity-day risk scores |
+| GET | `/anomalies` | flagged anomalies; `PATCH /{id}/acknowledge`, `/assign`, `DELETE /{id}/assign` |
+| GET/POST/PATCH/DELETE | `/rules` | the deterministic Phase 2 rule set (not the ML Phase 3 model, which isn't human-editable) |
 
 ---
 

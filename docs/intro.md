@@ -8,7 +8,7 @@ title: SecureZen Documentation
 
 > **Product by KRYA SOLUTIONS PRIVATE LIMITED**
 
-SecureZen ingests real SIEM/security logs (Wazuh + Fortigate today) and turns them into triaged, severity-labeled alerts on a SOC dashboard. An unsupervised ML anomaly filter and deterministic rules decide what's worth AI attention; a local classifier and an external LLM (Groq) decide severity for what gets through; a CrewAI forensic layer can go deeper on demand.
+SecureZen ingests real SIEM/security logs (Wazuh + Fortigate today) and turns them into triaged, severity-labeled alerts on a SOC dashboard. An unsupervised ML anomaly filter and deterministic rules decide what's worth AI attention; a local classifier and an external LLM (Groq) decide severity for what gets through; a 15-agent fleet (`AgentRunner`, CrewAI's successor) can investigate, triage, hunt, and — only with human approval — act on anything that needs to go deeper.
 
 Start here: [Architecture Overview](./architecture/overview.md).
 
@@ -36,7 +36,7 @@ Full walkthrough: [Getting Started > Setup](./getting-started/setup.md).
 | Ingestion | Webhook/connector-based (`POST /api/ingest/*`), plus a dedicated real-time poller feeding `ml_worker_daemon.py` |
 | ML anomaly filter | Isolation Forest (unsupervised, online) |
 | Classification | Local LLM (LogEM, trust-LOW-only policy) → Groq LLM fallback |
-| Forensics | CrewAI agent pipeline (on-demand / auto-triggered) |
+| Agent fleet | 15 agents on a shared `AgentRunner` base (real tool-calling, A2A hops, human-approval gate for live actions) |
 | Database | PostgreSQL (async, via SQLAlchemy + asyncpg) — no SQLite in the running app |
 | Backend API | FastAPI + Uvicorn |
 | Frontend | React + Vite (built with Bun) |

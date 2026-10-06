@@ -1,6 +1,6 @@
 # SecureZen AI SOC Dashboard — System Architecture
 
-> **Last rewritten**: August 2026, after the router package refactor and the ML worker rule-override / local-classifier work.
+> **Last rewritten**: August 2026, after the router package refactor and the ML worker rule-override / local-classifier work. **Touched up October 2026** to add custom detection rules as a third rule-override source and to correct references to the agent layer below (CrewAI has since been fully removed — see `docs/architecture/agentic_architecture.md`).
 > The previous version of this doc described a directory layout (`ip-intel-crewai/secure_zen_core/...`, `api/server.py`, SQLite-only storage) that no longer exists anywhere in the codebase. This version reflects the system as it actually runs today.
 
 ---
@@ -36,7 +36,10 @@ Real SIEM traffic (Wazuh/Fortigate)
 │  │     (self-training online, no fixed train/test dataset)   │
 │  └── Rule overrides (deterministic, run regardless of ML):    │
 │        ├── signature match → escalate                        │
-│        └── repeat-login count in 24h → escalate               │
+│        ├── repeat-login count in 24h → escalate               │
+│        └── active custom detection rules → escalate           │
+│            (human- or Detection Engineering agent-authored,   │
+│             managed on the Detection Rules page)              │
 │      → event proceeds only if ML flags it OR a rule fires     │
 │                                                               │
 │  Phase 2 — _phase2_infer()                                    │
@@ -129,7 +132,8 @@ backend/app/
 │   └── intelligence/            # split from a single intelligence_routes.py
 │       ├── ai_mitre.py, crewai.py, hunt.py, threat_actors.py, ...
 ├── database/                    # SQLAlchemy models, session management
-├── investigation/                # CrewAI/LangGraph forensic agent pipelines
+├── agents/                       # AgentRunner + the 18-agent fleet (see §7 below) — CrewAI's successor
+├── investigation/                # now thin backward-compat wrappers delegating to app/agents/*
 └── utils/helpers.py              # call_groq_with_fallback(), shared DB connection helpers
 ```
 
@@ -145,4 +149,7 @@ Two known trip-ups worth remembering when touching this structure:
 - `docs/research/fine-tuning.md` — full fine-tuning attempt history and why it's shelved
 - `docs/research/ml-filter-design.md` — full rationale for the ML filter's design choices and how it was validated
 - `docs/deployment/environments.md` — the 3-environment operational split in detail
-- `docs/architecture/agentic_architecture.md` — the CrewAI/LangGraph forensic investigation layer (separate from the classification pipeline above)
+- `docs/architecture/agentic_architecture.md` — the 18-agent `AgentRunner` fleet built on top of this classification pipeline (CrewAI's replacement)
+- `docs/architecture/blast-radius.md` — the case-explorer graph view built on top of alert/campaign data
+- `docs/architecture/email-security.md` — the phishing ensemble, live mailbox scanning, and the other Email Security features
+- `docs/architecture/forensic-analysis.md` — the embedded OpenSearch Dashboards views (Forensic Analysis, AI Analysis)

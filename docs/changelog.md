@@ -9,6 +9,42 @@ sidebar_position: 13
 
 ---
 
+## [Unreleased] — October 2026
+
+### Agent fleet: CrewAI replaced with AgentRunner + real tool-calling + A2A
+#### Added
+- **`AgentRunner`** (`backend/app/agents/runner.py`) — shared base class for every new agent: real LLM tool-calling (the model decides which tools to call, not a fixed sequence), a bounded autonomous loop (`max_iterations` + wall-clock timeout, reports `needs_human` instead of looping forever), automatic activity logging (`sz_agent_activity_log`), and real Langfuse tracing/cost accounting instead of a second homegrown cost table.
+- **15 of an 18-agent fleet built**: Alert Triage, Investigation (TruePositiveCrew's successor), MITRE Mapping, Daily Report, Threat Intelligence, Email Security, Detection Tuning, Incident Commander, Compliance, Attack Path, Response/SOAR, Executive Briefing, ZEN Chat (rebuilt), Threat Hunter, Detection Engineering. Full roster and what each does in `docs/architecture/agentic_architecture.md`.
+- **CrewAI fully removed.** The 4 original crews (`AlertTriageCrew`, `MitreMappingCrew`, `DailyReportCrew`, `TruePositiveCrew`) are now thin backward-compatible wrappers in `investigation/crew.py` delegating to the new agents.
+- **Real Agent2Agent (A2A) protocol** endpoints for Detection Engineering, Incident Commander, Investigation, and Response — Alert Triage is the first real A2A client, handing P1/P2 alerts straight to Investigation without a human in the loop.
+- **Human-approval gate completed** (`routers/approval_queue_routes.py`) — the Response/SOAR agent is the first agent that can touch a live system (block an IP), and only ever does so by proposing the action (`AgentRunner.propose_action()` → `sz_agent_actions`, `status='pending_approval'`); a human approves or rejects it in the Approval Queue UI before it actually executes. Replaces the old `response_engine.py` auto-fire path, which bypassed human review entirely and had been silently broken (a type mismatch meant it never actually ran).
+- **Resource Governance** (`services/governance_service.py`) — a single real-numbers view across 7 previously-disconnected usage/capacity limits (AI budget, Groq fallback rate, login limiter, DB pool usage, per-agent health) with alerting that didn't exist for any of them before.
+- **Pluggable LLM providers** (`services/llm_provider.py`) — any OpenAI-compatible provider can be activated from Settings → Integrations for the whole agent fleet, not just Groq; fixed a real bug where `AgentRunner` ignored the activated provider and always used Groq regardless.
+- **Real monitoring via Langfuse** (`services/langfuse_sync.py`) — every agent run's cost/token numbers are backfilled from Langfuse's own metrics API, not estimated locally.
+- **ZEN Chat rebuilt onto the shared tool library** — the old version glued the same hardcoded context dump onto every message and let the LLM free-write raw SQL with no tenant boundary. It now shares the same tenant-scoped, read-only tools as Threat Hunter/Investigation/Compliance and decides for itself what a question actually needs.
+- **UEBA Phase 3** — real unsupervised `IsolationForest` (scikit-learn) anomaly scoring per tenant per entity-type, trained fresh daily, blended with Phase 2's deterministic rule score. Full phase history in `docs/development/ueba-plan.md`.
+- **Daily Report overhaul** — the dashboard now reads real structured per-section JSON (not re-parsed prose), the Agent Fleet Activity section reflects real agent run data, and PDF/email/case-report exports are all real (previously partially stubbed).
+- **Ground-truth benchmark infrastructure** — 513 real alerts fully human-confirmed (`sz_ground_truth_labels`), plus an independent LogEM-vs-Groq-vs-Laya 3-way benchmark harness scoring precision/recall/F1 per class against that ground truth. Results land in `docs/ai-soc/ml-accuracy.md` once complete.
+
+#### Fixed
+- **Groq external-LLM fallback returning empty output on long/complex logs** — `max_tokens=100` was too tight for a reasoning model's internal "thinking" tokens before it ever emitted the final answer, so long raw logs silently parsed as `UNKNOWN`. Raised to 400, confirmed fixed.
+- **LLM provider key saves not reaching the running process** — saving a provider key in Settings now also writes `.env` in parallel, so a newly-activated provider takes effect without requiring a manual restart.
+- **`AgentRunner` respecting only Groq regardless of what was activated** — see "Pluggable LLM providers" above.
+
+### Blast Radius case explorer, Email Security hardening, Custom Detection Rules UI, embedded OpenSearch dashboards
+#### Added
+- **Blast Radius / Case Explorer** (`routers/blast_radius_routes.py`, `features/blastradius/`) — groups recent alerts into cases (campaign-linked or single-alert), graphs cases and shared entities (IP/user/host) so lateral movement across separately-alerted events becomes visible. Built in 6 stages: shared-entity graph engine → force-directed canvas → case list sidebar with filters → detail panels + Attack Path integration → timeline replay scrubber → 6-tier verdict taxonomy (Malicious/Suspicious/Inconclusive/False_positive/Benign/Degraded) with a split-view case report. Full detail in `docs/architecture/blast-radius.md`.
+- **Email Security: live mailbox scanning + behavioral signal** — Microsoft Graph client-credentials integration (`services/graph_mail_client.py`, `services/email_mailbox_sync.py`) replaces manual copy-paste intake; a new `sender_history` tool flags first-time senders, the classic BEC/VEC behavioral signal pure content-scoring can't catch.
+- **Email Security: QR code, time-of-click, auto-remediation** (all dormant by default, env-var activated) — QR/quishing detection via OpenCV (`services/qr_scanner.py`), HMAC-signed time-of-click URL re-verification (`services/click_protection.py`, matches Microsoft Safe Links), and auto-remediation that proposes (never auto-executes) mailbox action through the same human-approval gate as Response/SOAR. Full detail in `docs/architecture/email-security.md`.
+- **Custom Detection Rules UI** (`routers/detection_rules_routes.py`, `features/agents/DetectionRulesPage.jsx`) — full CRUD for the custom rules `ml_worker_daemon.py` already enforced as a rule-override source: list, edit, deactivate/reactivate, or author a rule directly as a human (skips the AI-proposal approval gate since there's no self-approval needed). A `created_by` column distinguishes `detection_engineering_agent` from a human's email.
+- **Forensic Analysis** (`routers/forensics_routes.py`) — a real embedded OpenSearch Dashboards Discover, deep-linking to a specific alert's ±2-day window and host/user. New `opensearch`/`opensearch-dashboards` Docker Compose services, rebranded (every non-core OSD plugin stripped at build time) and theme-synced to SecureZen's own dark/light toggle.
+- **AI Analysis dashboard** — 6 native OSD visualizations (verdict donut, confidence histogram, investigations-over-time, severity bar, top MITRE techniques, agent breakdown) auto-provisioned on every backend startup from a `securezen-ai-analysis` index (`sz_crewai_tasks` left-joined with `sz_alerts`), reusing Blast Radius's verdict taxonomy for consistent coloring.
+
+#### Fixed
+- **AI Analysis dashboard showing zero investigations** — every `sz_crewai_tasks` row referenced an `alert_id` already purged by the demo's 60-day cleanup job, so an inner join against `sz_alerts` silently returned nothing. Switched to a left join.
+
+---
+
 ## [Unreleased] — August 2026
 
 ### Pipeline rewrite: Postgres, real-time ML worker, rule overrides

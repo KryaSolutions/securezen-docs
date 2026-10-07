@@ -40,7 +40,8 @@ Full walkthrough: [Getting Started > Setup](./getting-started/setup.md).
 | Database | PostgreSQL (async, via SQLAlchemy + asyncpg) — no SQLite in the running app |
 | Backend API | FastAPI + Uvicorn |
 | Frontend | React + Vite (built with Bun) |
-| Deployment | Docker Compose — 4 services (`securezen-db`, `backend`, `ml-worker`, `frontend`) |
+| Deployment | Docker Compose — 12 services: 4 core app (`securezen-db`, `backend`, `ml-worker`, `frontend`) + 2 Forensic Analysis/OpenSearch + 6 self-hosted Langfuse monitoring |
+| Monitoring | Langfuse (self-hosted) — real per-agent cost/token traces, not a homegrown estimate |
 
 ## Keeping this accurate
 

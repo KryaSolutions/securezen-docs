@@ -47,7 +47,7 @@ cd main_folder
 docker compose up -d --build
 ```
 
-This starts 4 containers:
+This starts 12 containers — the core app (4) plus the embedded Forensic Analysis search stack (2, OpenSearch) and the self-hosted Langfuse monitoring stack (6, added October 2026). Full port table: `docs/architecture/network-topology.md`. The 4 you'll interact with directly:
 
 | Service | Container | Host port → Container port |
 |---|---|---|
@@ -61,7 +61,7 @@ The frontend is a static build — it does **not** proxy `/api` through nginx. I
 ### Verify it's healthy
 
 ```bash
-docker compose ps                                    # all 4 should show healthy/running
+docker compose ps                                    # all 12 should show healthy/running
 curl http://localhost:25000/health                   # backend liveness
 curl http://localhost:25000/api/alerts/worker/health  # is ml-worker actually processing
 ```

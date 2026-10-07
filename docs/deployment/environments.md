@@ -18,7 +18,18 @@ The demo server hosts other unrelated, resource-heavy services on the same box. 
 docker compose up -d --build
 ```
 
-4 containers: `securezen-db` (Postgres, `5434:5432`), `backend` (`25000:5000`), `ml-worker` (internal only, healthcheck on `:8001/health`), `frontend` (`27000:80`). Full env var list and health-check commands: `docs/getting-started/setup.md`.
+12 containers total (4 core app + 2 Forensic Analysis/OpenSearch + 6 self-hosted Langfuse monitoring — full breakdown in `docs/architecture/network-topology.md`). The 4 core: `securezen-db` (Postgres, `5434:5432`), `backend` (`25000:5000`), `ml-worker` (internal only, healthcheck on `:8001/health`), `frontend` (`27000:80`). Full env var list and health-check commands: `docs/getting-started/setup.md`.
+
+## New environment setup
+
+1. Clone the repo, create `.env` (full variable list: `docs/getting-started/setup.md`).
+2. Decide, deliberately, whether this environment is allowed to run the local model (`LOGEM_MODEL_PATH`) — default to **no** unless it's a dedicated test/candidate box with headroom to spare.
+3. `docker compose up -d --build`.
+4. Verify: `docker compose ps` (all 12 healthy), `curl http://localhost:25000/health`, `curl http://localhost:25000/api/alerts/worker/health`.
+
+## Rolling back
+
+No automated rollback tooling exists. In practice: `git checkout <previous-commit>` on that environment's clone, then repeat the update steps above. There is no blue/green or canary mechanism — a bad deploy means downtime until this manual rollback completes. Worth a real fix if this environment ever needs to guarantee uptime during deploys.
 
 ## Promoting a fix across environments
 

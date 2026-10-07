@@ -1,6 +1,6 @@
 # Production Readiness Checklist
 
-What's confirmed done vs. still open before this should be treated as hardened production infrastructure (not just "currently running and demoed successfully"). Detail on each gap: `docs/security/notes.md`.
+What's confirmed done vs. still open before this should be treated as hardened production infrastructure (not just "currently running and demoed successfully"). Detail on each gap: `docs/security/hardening.md`.
 
 | Item | Status |
 |---|---|

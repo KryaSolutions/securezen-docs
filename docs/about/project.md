@@ -2,7 +2,7 @@
 
 **Product by**: KRYA SOLUTIONS PRIVATE LIMITED
 
-SecureZen is an AI-augmented SOC platform: it ingests real SIEM/security logs, filters out routine noise with an unsupervised ML anomaly detector, applies deterministic rules for known-shape threats, classifies everything else with a local LLM backed by an external LLM fallback, and surfaces the result on a triage dashboard — with an on-demand CrewAI forensic layer for deeper investigation.
+SecureZen is an AI-augmented SOC platform: it ingests real SIEM/security logs, filters out routine noise with an unsupervised ML anomaly detector, applies deterministic rules for known-shape threats, classifies everything else with a local LLM backed by an external LLM fallback, and surfaces the result on a triage dashboard — with a 15-agent fleet (`AgentRunner`, CrewAI's successor — see `docs/architecture/agentic_architecture.md`) available for deeper investigation, triage, hunting, and gated live response.
 
 Full technical detail starts at `docs/architecture/overview.md`.
 

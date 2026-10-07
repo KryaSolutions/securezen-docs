@@ -66,4 +66,4 @@ Each server has its own repo variable, since the two machines use different user
 
 ## Rollback
 
-No automated rollback yet — same manual process as before (`git checkout <previous-commit>` on the server, then re-run the deploy steps by hand). See `docs/deployment/guide.md`.
+No automated rollback yet — same manual process as before (`git checkout <previous-commit>` on the server, then re-run the deploy steps by hand). See `docs/deployment/environments.md`.

@@ -1,5 +1,7 @@
 # Ground-Truth Verdict Feedback Loop — Build Spec
 
+> **Shipped**: `sz_verdict_feedback` table, `POST /raw-events/{event_id}/confirm-verdict`, and `GET /accuracy-stats` all exist and are live (`backend/app/routers/alerts/{detail_ai,verdicts}.py`) — this build spec's tasks are complete. Kept as the original design rationale.
+
 ## Why this exists
 
 After the 12-task classification bug-fix pass (`AI_CLASSIFICATION_BUG_FIXES.md`, same folder), the only accuracy

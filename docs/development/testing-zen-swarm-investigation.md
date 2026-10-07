@@ -1,5 +1,7 @@
 # Testing Guide: ZEN Swarm / Forensic Swarm Investigation
 
+> **Archived (October 2026)**: this describes the pre-`AgentRunner` CrewAI-based investigation pipeline. CrewAI has since been fully removed — see `docs/architecture/agentic_architecture.md` for the current `InvestigationAgent`/`AgentRunner` design. Kept as real QA history, not current instructions.
+
 How to manually verify the real multi-agent LangGraph pipeline (`crew.py`'s `TruePositiveCrew`) end to end, from both places it's now wired up: the alert detail view (`AlertAnalysis.jsx`) and the dedicated Forensic Swarm page (`TriagePage.jsx`).
 
 ## 1. Prerequisites

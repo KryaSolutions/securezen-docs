@@ -11,7 +11,6 @@ Real open items being tracked, not aspirational sprint fiction (see `docs/CHANGE
 | Office 365 / native Windows Security Event connector fix (currently ingesting with 100% empty log bodies) | Open, tracked in `docs/ai-soc/reliability-log.md` item 34 |
 | Observability stack (Prometheus/Grafana or equivalent) | Not started — noted as a real gap in `docs/experiments/candidate-resources-evaluated.md` |
 | Production hardening checklist | ✅ JWT secret enforcement, CORS scoping, login rate limiting done. Monitoring, automated rollback, credential rotation still open — see `docs/deployment/production.md` |
-| Prompt externalization (27 inline LLM prompts → files) | In progress, phased — see `docs/development/prompt-externalization-plan.md` |
 | MISP integration for community threat intel | Under consideration, not started — see `docs/research/competitive-analysis.md` |
 | Case management (TheHive-style) vs. current dashboard status tracking | Open architectural decision, not started — would replace, not complement, current Case Management cards |
 

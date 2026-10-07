@@ -103,7 +103,7 @@ const config = {
             items: [
               {label: 'Getting Started', to: '/getting-started/installation'},
               {label: 'Architecture', to: '/architecture/overview'},
-              {label: 'Deployment', to: '/deployment/guide'},
+              {label: 'Deployment', to: '/deployment/environments'},
             ],
           },
           {

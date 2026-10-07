@@ -1,6 +1,6 @@
 # Docker Compose Reference
 
-The full `docker-compose.yml` (repo root) defines 4 services — see `docs/architecture/network-topology.md` for the port table. This page covers the operational details.
+The full `docker-compose.yml` (repo root) defines 12 services — 4 core app, 2 Forensic Analysis/OpenSearch, 6 self-hosted Langfuse monitoring — see `docs/architecture/network-topology.md` for the full port table. This page covers the operational details.
 
 ## Bringing it up / updating a running deployment
 

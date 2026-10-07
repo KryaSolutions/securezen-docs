@@ -31,6 +31,7 @@ const sidebars = {
       type: 'category',
       label: 'Architecture',
       items: [
+        'architecture/tech-stack-and-workflow',
         'architecture/overview',
         'architecture/agentic_architecture',
         'architecture/components',

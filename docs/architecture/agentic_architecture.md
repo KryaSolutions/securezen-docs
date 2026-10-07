@@ -16,6 +16,8 @@ The old crews (`AlertTriageCrew`, `MitreMappingCrew`, `DailyReportCrew`, `TruePo
 
 The four original crews were migrated onto this base as separate, verified steps (not bundled with new capability, to avoid risking existing verdicts): `TruePositiveCrew` → `InvestigationAgent`, `AlertTriageCrew` → `AlertTriageAgent`, `MitreMappingCrew` → `MitreAttackAgent`, `DailyReportCrew` → `DailyReportAgent`. The old crew classes in `investigation/crew.py` are now thin backward-compatible wrappers delegating to these, so nothing calling them had to change.
 
+**Precisely which library does what** (confirmed directly against imports, not assumed): `AgentRunner` is built on real **LangChain** primitives (`langchain_core` messages/tools, `langchain_groq.ChatGroq`, `bind_tools()`) in a hand-written bounded loop — it is **not** built on LangGraph, despite an inaccurate claim in `runner.py`'s own code comment. The only genuine LangGraph `StateGraph` usage anywhere in this codebase is a separate, standalone 2-node graph in `classifier_lab/src/graph.py`, invoked out-of-process for one specific ingestion path — it has no role in this agent fleet. Full detail: `docs/architecture/tech-stack-and-workflow.md` §5.
+
 ---
 
 ## 2. The 18-agent roster

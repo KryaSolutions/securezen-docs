@@ -2,6 +2,8 @@
 
 > **Last rewritten**: August 2026, after the router package refactor and the ML worker rule-override / local-classifier work. **Touched up October 2026** to add custom detection rules as a third rule-override source and to correct references to the agent layer below (CrewAI has since been fully removed — see `docs/architecture/agentic_architecture.md`).
 > The previous version of this doc described a directory layout (`ip-intel-crewai/secure_zen_core/...`, `api/server.py`, SQLite-only storage) that no longer exists anywhere in the codebase. This version reflects the system as it actually runs today.
+>
+> **For a freshly-verified, file-by-file trace** (re-read directly from source in October 2026, including 2 real corrections this doc didn't have — e.g. `ml_worker_daemon.py` does not run inside the `backend` container, and the agent fleet uses LangChain, not LangGraph), see `docs/architecture/tech-stack-and-workflow.md`.
 
 ---
 

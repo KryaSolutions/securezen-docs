@@ -627,7 +627,7 @@ a random everyday sample, is what caught it in time.
 
 ### 34. 🔴 Found, not yet fixed — Office 365 and native Windows security logs carry no real content at all
 **The problem:** While building a training dataset for the AI fine-tuning work (see
-`../research/fine-tuning.md`), we checked every Office 365 event ever ingested — all
+`docs/architecture/overview.md` §3), we checked every Office 365 event ever ingested — all
 18,820 of them, across every category (logins, admin actions, user updates, everything) — and found
 that **every single one** has a completely empty log body. The same is true for native Windows
 security alerts like "Domain Admins Group Changed." Only the category label survives; the actual

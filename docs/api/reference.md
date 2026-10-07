@@ -176,7 +176,7 @@ Admin-only. `GET /` lists configured providers/keys; `PUT /{id}` saves one (also
 
 ## UEBA — `/api/ueba` (`ueba_routes.py`)
 
-See `docs/architecture/agentic_architecture.md` §7 and `docs/development/ueba-plan.md`.
+See `docs/architecture/agentic_architecture.md` §7.
 
 | Method | Path | Notes |
 |---|---|---|

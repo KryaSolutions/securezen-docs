@@ -22,7 +22,7 @@ sidebar_position: 13
 - **Pluggable LLM providers** (`services/llm_provider.py`) — any OpenAI-compatible provider can be activated from Settings → Integrations for the whole agent fleet, not just Groq; fixed a real bug where `AgentRunner` ignored the activated provider and always used Groq regardless.
 - **Real monitoring via Langfuse** (`services/langfuse_sync.py`) — every agent run's cost/token numbers are backfilled from Langfuse's own metrics API, not estimated locally.
 - **ZEN Chat rebuilt onto the shared tool library** — the old version glued the same hardcoded context dump onto every message and let the LLM free-write raw SQL with no tenant boundary. It now shares the same tenant-scoped, read-only tools as Threat Hunter/Investigation/Compliance and decides for itself what a question actually needs.
-- **UEBA Phase 3** — real unsupervised `IsolationForest` (scikit-learn) anomaly scoring per tenant per entity-type, trained fresh daily, blended with Phase 2's deterministic rule score. Full phase history in `docs/development/ueba-plan.md`.
+- **UEBA Phase 3** — real unsupervised `IsolationForest` (scikit-learn) anomaly scoring per tenant per entity-type, trained fresh daily, blended with Phase 2's deterministic rule score. Full detail in `docs/architecture/agentic_architecture.md` §7.
 - **Daily Report overhaul** — the dashboard now reads real structured per-section JSON (not re-parsed prose), the Agent Fleet Activity section reflects real agent run data, and PDF/email/case-report exports are all real (previously partially stubbed).
 - **Ground-truth benchmark infrastructure** — 513 real alerts fully human-confirmed (`sz_ground_truth_labels`), plus an independent LogEM-vs-Groq-vs-Laya 3-way benchmark harness scoring precision/recall/F1 per class against that ground truth. Results land in `docs/ai-soc/ml-accuracy.md` once complete.
 
@@ -55,7 +55,7 @@ sidebar_position: 13
 - **Denormalized verdict context** — `verdicts` rows now carry srcip/dstip/country/device/hostname/rule_description directly, so the dashboard doesn't need a join back to raw events.
 - **Multi-server operational split** — a permanently-frozen demo server, a dedicated test/candidate server running the local model against real traffic, and local dev.
 - **Manual ML filter validation methodology** (`sz_ml_filter_validation` table) — stratified human review, used in place of automated accuracy scoring since the original ground-truth data was lost in an earlier cleanup wipe.
-- **LoRA fine-tuning attempt** for the local classifier — trained and shadow-tested, but shelved: it called LOW on 100% of real HIGH/CRITICAL test cases (see `docs/research/fine-tuning.md`).
+- **LoRA fine-tuning attempt** for the local classifier — trained and shadow-tested, but shelved: it called LOW on 100% of real HIGH/CRITICAL test cases (see `docs/architecture/overview.md` §3).
 
 #### Fixed
 - **`load_dotenv(override=True)` env corruption** — multiple modules (`anomaly_detector.py`, `ip_enricher.py`, `response_engine.py`, `alert_classifier.py`) were silently overwriting correct Docker container Postgres env vars with stale `.env` file defaults on import. Root-caused and fixed across all four.

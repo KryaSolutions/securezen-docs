@@ -1,5 +1,0 @@
-# Context — Why This Project Exists
-
-A SOC analyst can't manually read every log line a real environment produces — most of it is routine, and treating it all as equally important either buries analysts in noise or lets real threats slip past unnoticed in the volume. SecureZen exists to do the first-pass filtering and triage an analyst would otherwise do by hand, using a combination of unsupervised ML, deterministic rules, and tiered LLM classification (`docs/architecture/overview.md`), so a human's attention goes to what actually needs it.
-
-This isn't a research project chasing a benchmark number — it's built against real client SIEM traffic (KRYA Solutions' own client environments, Wazuh + Fortigate), which is also why so much of `docs/research/` and `docs/ai-soc/reliability-log.md` is about the specific, unglamorous problems real traffic creates (near-zero real CRITICAL examples to learn from, connectors that silently ingest empty log bodies, a filter that has to work with no ground truth) rather than the cleaner problems a synthetic benchmark dataset would present.

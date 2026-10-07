@@ -10,6 +10,6 @@
 | GET | `/api/alerts/accuracy-stats` | accuracy tracking, where available |
 | GET | `/api/pg-verdicts` | direct read of the raw `verdicts` table (feature-flagged) |
 | GET | `/api/dashboard-ai-insights` | AI-derived dashboard summaries |
-| GET | `/api/ai/budget-status` | LLM cost/budget tracker status — see `docs/research/cost-architecture.md` |
+| GET | `/api/ai/budget-status` | LLM cost/budget tracker status |
 
-To actually trigger or inspect inference itself, the real "API" is the daemon's own loop, not a request/response call — see `docs/architecture/overview.md` §2 for the poll → filter → classify → save phases, and `docs/research/ml-filter-design.md` for how it decides.
+To actually trigger or inspect inference itself, the real "API" is the daemon's own loop, not a request/response call — see `docs/architecture/overview.md` §2-3 for the poll → filter → classify → save phases and why each design choice (including the ML filter's) was made.

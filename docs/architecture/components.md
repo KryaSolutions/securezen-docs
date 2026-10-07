@@ -28,4 +28,4 @@ Feature-folder organized under `features/`: `alerts/`, `intelligence/`, `reports
 
 ## The separate, standalone classification lab
 
-`classifier_lab/src/` (`engine.py`, `toon.py`, `pg_sync.py`) is a distinct subsystem from `backend/app/ml_utils/` — it handles LLM-call tiering, caching, and payload compression for the classification pipeline, and syncs verdicts into `sz_alerts`. See `docs/research/cost-architecture.md` for what it actually does.
+`classifier_lab/src/` (`engine.py`, `toon.py`, `pg_sync.py`) is a distinct subsystem from `backend/app/ml_utils/` — it handles LLM-call tiering, caching, and payload compression for the classification pipeline, and syncs verdicts into `sz_alerts`.

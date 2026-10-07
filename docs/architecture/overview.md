@@ -47,7 +47,7 @@ Real SIEM traffic (Wazuh/Fortigate)
 │  Phase 2 — _phase2_infer()                                    │
 │  ├── Local LLM (LogEM) tries first                             │
 │  │     trusted ONLY when confidently LOW (proven unreliable    │
-│  │     at escalating — see docs/research/)                     │
+│  │     at escalating — see §3 below)                            │
 │  └── Otherwise → external LLM (Groq, multi-model fallback)     │
 │      Rule overrides re-applied here too (escalate-only,        │
 │      never downgrade a local/external answer)                  │
@@ -79,7 +79,7 @@ If a rule can fully describe a pattern (a named attack signature appearing verba
 Ground-truth validation (60 real samples) found the local model's non-LOW calls were unreliable — 12/12 sampled HIGH calls were on genuinely benign logs, and it failed to produce a parseable answer at all ~44% of the time. Its LOW calls, however, were accurate enough to trust. So: local model filters out the obviously-benign cheaply; anything else always gets confirmed by the external LLM. Same logic that keeps rules deterministic — don't trust a component for calls it's been shown to get wrong.
 
 **Fine-tuning tried, not currently used:**
-A LoRA fine-tune of the local model was built, trained, and shadow-tested against real production severities. It confidently called LOW on 100% of real HIGH/CRITICAL threats in the test batch — worse than the untouched base model, because there's almost no real CRITICAL/HIGH training data to fine-tune on (near-zero real CRITICAL events exist in this environment; genuine attacks are rare by nature). Shelved, not abandoned — revisit once enough real high-severity examples accumulate naturally. Full history in `docs/research/fine-tuning.md`.
+A LoRA fine-tune of the local model was built, trained, and shadow-tested against real production severities. It confidently called LOW on 100% of real HIGH/CRITICAL threats in the test batch — worse than the untouched base model, because there's almost no real CRITICAL/HIGH training data to fine-tune on (near-zero real CRITICAL events exist in this environment; genuine attacks are rare by nature). Shelved, not abandoned — revisit once enough real high-severity examples accumulate naturally.
 
 ---
 
@@ -148,8 +148,7 @@ Two known trip-ups worth remembering when touching this structure:
 ## 7. Where To Look For More Detail
 
 - `docs/ai-soc/reliability-log.md` — incident/postmortem log of specific bugs found and fixed, with root cause
-- `docs/research/fine-tuning.md` — full fine-tuning attempt history and why it's shelved
-- `docs/research/ml-filter-design.md` — full rationale for the ML filter's design choices and how it was validated
+- `docs/ai-soc/ml-accuracy.md` — real accuracy numbers, including the fine-tuning attempt's result
 - `docs/deployment/environments.md` — the 3-environment operational split in detail
 - `docs/architecture/agentic_architecture.md` — the 18-agent `AgentRunner` fleet built on top of this classification pipeline (CrewAI's replacement)
 - `docs/architecture/blast-radius.md` — the case-explorer graph view built on top of alert/campaign data

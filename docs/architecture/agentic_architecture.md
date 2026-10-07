@@ -125,7 +125,7 @@ UEBA (User and Entity Behavior Analytics) is a **separate ML system from the cla
 
 Documented honestly in the code itself: this fits one model **per entity type**, pooling all users/hosts of that type together — not yet a personal per-entity baseline, since most entities don't yet have the 2+ weeks of individual history a true personal model would need. It also gates the raw percentile score on the model's own anomaly flag (`predict() == -1`), because an ungated percentile rescale always makes *someone* look "most unusual" even on a day where nothing is actually wrong — verified directly in testing before shipping.
 
-See `docs/development/ueba-plan.md` for the full phase-by-phase build spec.
+See `docs/ai-soc/ml-accuracy.md` for how its scoring is validated.
 
 ---
 
@@ -144,7 +144,6 @@ See `docs/development/ueba-plan.md` for the full phase-by-phase build spec.
 ## 10. Where to look for more detail
 
 - `docs/architecture/overview.md` — the per-alert classification pipeline (rules, ML filter, LogEM, Groq) that feeds alerts to this agent layer
-- `docs/development/ueba-plan.md` — full UEBA phase-by-phase build spec
 - `docs/ai-soc/ml-accuracy.md` — real accuracy numbers for every classification/judgment component in the system
-- `docs/ai-soc/architecture.md` — the plain-language version of the whole pipeline, including this agent layer
+- `docs/features/overview.md` — the plain-language, evaluator-facing version of the whole pipeline, including this agent layer
 - `docs/changelog.md` — when each piece of this shipped

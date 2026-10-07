@@ -12,7 +12,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 const config = {
   title: 'SecureZen',
   tagline: 'AI SOC Dashboard — Documentation Centre',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/logo.svg',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -109,12 +109,12 @@ const config = {
           {
             title: 'More',
             items: [
-              {label: 'GitHub', href: 'https://github.com/KryaSolutions/securezen'},
+              {label: 'GitHub', href: 'https://github.com/KryaSolutions/securezen-docs'},
               {label: 'Changelog', to: '/changelog'},
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} KRYA SOLUTIONS PRIVATE LIMITED. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} SecureZen. Proprietary — all rights reserved. Developed by KRYA SOLUTIONS PRIVATE LIMITED.`,
       },
       prism: {
         theme: prismThemes.github,

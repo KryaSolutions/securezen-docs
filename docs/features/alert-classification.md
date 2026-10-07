@@ -12,7 +12,7 @@ A SOC can't have a human read every log line, and a single AI model asked to jud
 
 A LoRA fine-tune of the local model was tried and tested against real production severities — it confidently called every real HIGH/CRITICAL threat in the test batch "LOW," which is worse than doing nothing. It was shelved rather than shipped, because there isn't enough real high-severity training data yet (genuine attacks are rare by nature). That attempt and its outcome are documented, not hidden.
 
-Accuracy claims aren't taken on faith either: 513 real alerts have been reviewed one-by-one by a person to build a human-confirmed ground truth, and an ongoing 3-way benchmark is scoring the local model (LogEM), the external fallback (Groq), and an independent open-weights model (Laya) against that same set. That benchmark is still running — no result is published yet.
+Accuracy claims aren't taken on faith either: 513 real alerts were reviewed one-by-one by a person to build a human-confirmed ground truth, then scored across all 3 classification systems (LogEM, Groq, and an independent open-weights model, Laya). The result: Groq is clearly the strongest performer (94.9% accuracy, catches 5 of 9 real threats in the set) — meaningfully ahead of the fine-tuned local model (74.3%, 4 of 9) and far ahead of Laya (18.9%, unusable as a filter). This confirms the pipeline's design choice above — trust the local model only when confidently LOW, let Groq handle the real judgment calls — with real measured evidence. Full numbers: `docs/ai-soc/ml-accuracy.md`.
 
 ---
 
